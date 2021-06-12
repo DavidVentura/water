@@ -6,6 +6,8 @@ import typing
 from dataclasses import dataclass
 from typing import List, Dict, Callable, Any, Tuple
 
+class BadArguments(ValueError):
+    pass
 
 @dataclass
 class MCallable:
@@ -50,13 +52,15 @@ def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
     while i < len(args):
         arg = args[i]
         if not arg.startswith('--'):
-            raise ValueError(f'Argument {arg} is neither a key (--option) nor a value')
+            raise BadArguments(f'Argument {arg} is neither a key (--option) nor a value')
 
         with_equal = re.match(r'(?P<flag>--[a-z0-9-_]+)=(?P<value>.+)', arg)
         if with_equal:
             k = with_equal.group('flag')
             v = with_equal.group('value')
         else:
+            if i+1 == len(args):
+                raise BadArguments(f'Flag {arg} missing value')
             k = arg
             v = args[i+1]
             i += 1
@@ -77,7 +81,7 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
 
     _callables = {c.name: c for c in ns.callables}
     if command not in _callables:
-        raise ValueError(f"{ns} has no {command}")
+        raise BadArguments(f"{ns} has no {command}")
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)
@@ -89,9 +93,9 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
     missing_params = needed_params - rcvd_params
     extra_params = rcvd_params - all_params
     if missing_params:
-        raise ValueError(f"No parameters for {missing_params}")
+        raise BadArguments(f"No parameters for {missing_params}")
     elif extra_params:
-        raise ValueError(f"Too many parameters: {extra_params}")
+        raise BadArguments(f"Too many parameters: {extra_params}")
 
     return _callable, kwargs
 

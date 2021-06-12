@@ -1,5 +1,7 @@
+import pytest
+
 from typing import List, Optional, Union
-from water_cli.parser import execute_command
+from water_cli.parser import execute_command, BadArguments
 
 
 class Math1:
@@ -71,3 +73,15 @@ def test_integration_override_default_compound_type_2():
 def test_integration_compound_type():
     res = execute_command(Str, 'combined --items b,2')
     assert res == ['b', 2]
+
+
+def test_integration_extra_args():
+    with pytest.raises(BadArguments) as e:
+        execute_command(Math1, 'add --a 2 --b 3 --c 4')
+    assert "'c'" in str(e)
+
+
+def test_integration_missing_args():
+    with pytest.raises(BadArguments) as e:
+        execute_command(Math1, 'add --a 2')
+    assert "'b'" in str(e)
