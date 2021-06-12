@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "water_cli"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["david <davidventura27@gmail.com>"]
+readme = 'README.md'
+repository = 'https://github.com/DavidVentura/water'
 
 [tool.poetry.dependencies]
 python = "^3.6"
