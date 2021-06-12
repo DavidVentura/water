@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "water_cli"
-version = "0.1.3"
+version = "0.1.4"
 description = ""
 authors = ["david <davidventura27@gmail.com>"]
 readme = 'README.md'
