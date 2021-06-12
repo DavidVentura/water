@@ -33,8 +33,9 @@ class Namespace:
             name = callable_root.__name__
         if inspect.isclass(callable_root):
             callable_root = callable_root()
+        _is_mod = inspect.ismodule(callable_root)
 
-        _members = inspect.getmembers(callable_root, inspect.isclass)
+        _members = inspect.getmembers(callable_root, lambda x: inspect.isclass(x) or (not _is_mod and inspect.ismodule(x)))
         _methods = inspect.getmembers(callable_root, lambda x: inspect.ismethod(x) or inspect.isfunction(x))
 
         members = [Namespace.from_callable(_type, name) for name, _type in _members if not name.startswith('_')]

@@ -1,5 +1,6 @@
 from water_cli import __version__
 from water_cli.parser import Namespace
+from tests import module
 
 class Thing:
     def fn(self):
@@ -21,6 +22,9 @@ class NestedObj:
 
 class Members:
     lowercase = Thing
+
+class Module:
+    a_module = module
 
 def test_namespace():
     res = Namespace.from_callable(NestedObj)
@@ -50,3 +54,10 @@ def test_namespace():
 def test_class_members():
     n = Namespace.from_callable(Members)
     assert [m.name for m in n.members] == ['lowercase']
+
+
+def test_module_members():
+    n = Namespace.from_callable(Module)
+    assert [m.name for m in n.members] == ['a_module']
+    assert n.members[0].members[0].name == 'ClassInMod'
+    assert n.members[0].members[0].callables[0].name == 'fn'
