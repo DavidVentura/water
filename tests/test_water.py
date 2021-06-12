@@ -1,5 +1,5 @@
 from typing import List, Optional, Union
-from water.parser import execute_command
+from water_cli.parser import execute_command
 
 
 class Math1:

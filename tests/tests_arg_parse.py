@@ -1,4 +1,4 @@
-from water.parser import args_to_kwargs
+from water_cli.parser import args_to_kwargs
 
 def test_args_to_kwargs():
     res = args_to_kwargs(['--arg2', '20'])

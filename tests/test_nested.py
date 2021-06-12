@@ -1,6 +1,9 @@
-from water import __version__
-from water.parser import Namespace
+from water_cli import __version__
+from water_cli.parser import Namespace
 
+class Thing:
+    def fn(self):
+        pass
 
 class NestedObj:
     class Inside1:
@@ -15,6 +18,9 @@ class NestedObj:
     def a(self):
         pass
 
+
+class Members:
+    lowercase = Thing
 
 def test_namespace():
     res = Namespace.from_callable(NestedObj)
@@ -39,3 +45,8 @@ def test_namespace():
     assert len(ri.callables) == 1
     assert ri.callables[0].fn.__name__ == 'fn2'
     assert ri.callables[0].fn.__self__.__class__ == NestedObj.Inside2.ReallyInside
+
+
+def test_class_members():
+    n = Namespace.from_callable(Members)
+    assert [m.name for m in n.members] == ['lowercase']

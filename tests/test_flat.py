@@ -1,4 +1,4 @@
-from water.parser import parse, args_to_kwargs, Namespace
+from water_cli.parser import parse, args_to_kwargs, Namespace
 
 class FlatObj:
     def fn1(self, number):

@@ -14,9 +14,9 @@ class MCallable:
     fn: Callable
 
     @staticmethod
-    def from_callable(callable_root) -> 'MCallable':
+    def from_callable(callable_root, name) -> 'MCallable':
         s = inspect.signature(callable_root)
-        return MCallable(name=callable_root.__name__,
+        return MCallable(name=name,
                          args=list(s.parameters.values()),
                          fn=callable_root)
 
@@ -28,16 +28,17 @@ class Namespace:
     callables: List[MCallable]
 
     @staticmethod
-    def from_callable(callable_root) -> 'Namespace':
-        name = callable_root.__name__
+    def from_callable(callable_root, name=None) -> 'Namespace':
+        if not name:
+            name = callable_root.__name__
         if inspect.isclass(callable_root):
             callable_root = callable_root()
 
         _members = inspect.getmembers(callable_root, inspect.isclass)
         _methods = inspect.getmembers(callable_root, lambda x: inspect.ismethod(x) or inspect.isfunction(x))
 
-        members = [Namespace.from_callable(_type) for name, _type in _members if not name.startswith('_')]
-        methods = [MCallable.from_callable(_type) for _, _type in _methods]
+        members = [Namespace.from_callable(_type, name) for name, _type in _members if not name.startswith('_')]
+        methods = [MCallable.from_callable(_type, name) for name, _type in _methods]
 
         return Namespace(name=name, members=members, callables=methods)
 
