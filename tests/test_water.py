@@ -29,6 +29,9 @@ class Str:
     def combined(self, items: List[Union[int, str]]):
         return items
 
+    def spaces_to_dashes(self, text: str):
+        return text.replace(' ', '-')
+
 
 def test_integration_primitive():
     res = execute_command(Math1, 'add --a 10 --b 5.1')
@@ -85,3 +88,13 @@ def test_integration_missing_args():
     with pytest.raises(BadArguments) as e:
         execute_command(Math1, 'add --a 2')
     assert "'b'" in str(e)
+
+
+def test_values_with_spaces_quoted():
+    res = execute_command(Str, r'spaces_to_dashes --text "this text has spaces"')
+    assert res == 'this-text-has-spaces'
+
+
+def test_values_with_spaces():
+    res = execute_command(Str, r'spaces_to_dashes --text this\ text\ has\ spaces')
+    assert res == 'this-text-has-spaces'
