@@ -5,6 +5,17 @@ Like [fire](https://github.com/google/python-fire)
 This python library parses classes so that they can be executed as commands.  
 In contrast with fire, there is no "automatic" type casting -- the type casting is 100% based on type hints.
 
+## Type casting
+
+When calling `execute_command` the values passed in the command get casted to the annotated types on the function
+signature.
+
+Supported types:
+
+* int, float
+* bool: the strings `['true', '1', 't', 'y']` are considered true.
+* lists, tuples: input is split by comma (`,`) and each element is casted independently.
+
 # Examples
 
 ## Type casting

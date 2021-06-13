@@ -129,6 +129,8 @@ def cast(value: Any, annotation: Any):
             value = [cast(i, args[0]) for i in value]
     elif annotation in [int, float]:
         value = annotation(value)
+    elif annotation is bool:
+        value = value.lower() in ['true', '1', 't', 'y', 'yes']
     return value
 
 def execute_command(c, input_command: str):
