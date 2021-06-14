@@ -4,23 +4,27 @@ import re
 import typing
 
 from dataclasses import dataclass
-from typing import List, Dict, Callable, Any, Tuple
+from typing import List, Dict, Callable, Any, Tuple, Optional
+
 
 class BadArguments(ValueError):
     pass
+
 
 @dataclass
 class MCallable:
     name: str
     args: List[inspect.Parameter]
     fn: Callable
+    parent: 'Namespace'
 
     @staticmethod
-    def from_callable(callable_root, name) -> 'MCallable':
+    def from_callable(callable_root, name, parent) -> 'MCallable':
         s = inspect.signature(callable_root)
         return MCallable(name=name,
                          args=list(s.parameters.values()),
-                         fn=callable_root)
+                         fn=callable_root,
+                         parent=parent)
 
 
 @dataclass
@@ -28,22 +32,30 @@ class Namespace:
     name: str
     members: List['Namespace']
     callables: List[MCallable]
+    parent: Optional['Namespace'] = None
 
     @staticmethod
-    def from_callable(callable_root, name=None) -> 'Namespace':
+    def from_callable(callable_root, name=None, parent=None) -> 'Namespace':
         if not name:
             name = callable_root.__name__
         if inspect.isclass(callable_root):
             callable_root = callable_root()
+
         _is_mod = inspect.ismodule(callable_root)
 
         _members = inspect.getmembers(callable_root, lambda x: inspect.isclass(x) or (not _is_mod and inspect.ismodule(x)))
         _methods = inspect.getmembers(callable_root, lambda x: inspect.ismethod(x) or inspect.isfunction(x))
 
-        members = [Namespace.from_callable(_type, name) for name, _type in _members if not name.startswith('_')]
-        methods = [MCallable.from_callable(_type, name) for name, _type in _methods]
+        ns = Namespace(name=name, members=[], callables=[], parent=parent)
 
-        return Namespace(name=name, members=members, callables=methods)
+        members = [Namespace.from_callable(_type, name, parent=ns) for name, _type in _members if not name.startswith('_')]
+        methods = [MCallable.from_callable(_type, name, parent=ns) for name, _type in _methods]
+
+        ns.members = members
+        ns.callables = methods
+
+        return ns
+
 
 def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
     kwargs = {}
@@ -81,7 +93,14 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
 
     _callables = {c.name: c for c in ns.callables}
     if command not in _callables:
-        raise BadArguments(f"{ns} has no {command}")
+        hierarchy = []
+        parent = ns.parent
+        while parent:
+            hierarchy.insert(0, parent.name)
+            parent = parent.parent
+        _hierarchy = ' '.join(hierarchy[1:]) + ' '
+
+        raise BadArguments(f"'{_hierarchy}{ns.name}' has no sub-command '{command}'")
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)
