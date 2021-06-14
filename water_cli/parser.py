@@ -1,10 +1,14 @@
 import shlex
 import inspect
 import re
-import typing
 
 from dataclasses import dataclass
-from typing import List, Dict, Callable, Any, Tuple, Optional
+from typing import List, Dict, Callable, Any, Tuple, Optional, Union
+
+try:
+    from typing import get_origin as typing_get_origin, get_args as typing_get_args
+except ImportError:
+    from typing_extensions import get_origin as typing_get_origin, get_args as typing_get_args
 
 
 class BadArguments(ValueError):
@@ -132,10 +136,10 @@ def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
     return c.fn(**casted)
 
 def cast(value: Any, annotation: Any):
-    origin = typing.get_origin(annotation)
-    args = typing.get_args(annotation)
+    origin = typing_get_origin(annotation)
+    args = typing_get_args(annotation)
     # print(value, annotation, origin, args)
-    if origin == typing.Union:
+    if origin == Union:
         for arg in args:
             try:
                 value = cast(value, arg)
