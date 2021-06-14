@@ -5,10 +5,11 @@ import re
 from dataclasses import dataclass
 from typing import List, Dict, Callable, Any, Tuple, Optional, Union
 
-try:
-    from typing import get_origin as typing_get_origin, get_args as typing_get_args
-except ImportError:
-    from typing_extensions import get_origin as typing_get_origin, get_args as typing_get_args
+def typing_get_args(a):
+    return getattr(a, '__args__', None)
+
+def typing_get_origin(a):
+    return getattr(a, '__origin__', a)
 
 
 class BadArguments(ValueError):
@@ -146,7 +147,7 @@ def cast(value: Any, annotation: Any):
                 break
             except Exception:
                 continue
-    elif origin in [list, tuple]:
+    elif origin in [list, tuple, List, Tuple]:
         value = value.split(',')
         if len(args):
             value = [cast(i, args[0]) for i in value]
