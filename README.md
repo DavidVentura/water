@@ -15,6 +15,9 @@ Supported types:
 * int, float
 * bool: the strings `['true', '1', 't', 'y']` are considered true.
 * lists, tuples: input is split by comma (`,`) and each element is casted independently.
+* enum
+* Union[]: gets casted to all options in order, first success is returned.
+  * `Optional[type]` is `Union[type, NoneType]`
 
 # Examples
 

@@ -1,6 +1,7 @@
-import shlex
+import enum
 import inspect
 import re
+import shlex
 
 from dataclasses import dataclass
 from typing import List, Dict, Callable, Any, Tuple, Optional, Union
@@ -155,6 +156,8 @@ def cast(value: Any, annotation: Any):
         value = annotation(value)
     elif annotation is bool:
         value = value.lower() in ['true', '1', 't', 'y', 'yes']
+    elif issubclass(annotation, enum.Enum):
+        value = annotation[value]
     return value
 
 def execute_command(c, input_command: str):

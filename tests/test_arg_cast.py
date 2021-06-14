@@ -1,8 +1,13 @@
+import enum
 import typing
 
 import pytest
 
 from water_cli.parser import cast
+
+class SomeEnum(enum.Enum):
+    SOMETHING = enum.auto()
+    OTHER = enum.auto()
 
 
 @pytest.mark.parametrize('_type,in_str,expected', [
@@ -36,6 +41,10 @@ from water_cli.parser import cast
 
     (typing.Optional[typing.List[str]], "asd", ["asd"]),
     (typing.Optional[typing.List[str]], None, None),
+    (typing.Optional[typing.List[str]], None, None),
+
+    (SomeEnum, 'SOMETHING', SomeEnum.SOMETHING),
+    (SomeEnum, 'OTHER', SomeEnum.OTHER),
     ])
 def test_cast(_type, in_str, expected):
     assert cast(in_str, _type) == expected
