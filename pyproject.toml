@@ -10,9 +10,12 @@ repository = 'https://github.com/DavidVentura/water'
 python = "^3.6"
 typing-extensions = { version = "^3.10.0", python = "<3.8" }
 dataclasses = { version = "^0.8", python = "<3.7" }
+docstring-parser = {version = "^0.8.1", extras = ["docs"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+mkdocs = "^1.2.1"
+mkdocs-include-markdown-plugin = "^3.1.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

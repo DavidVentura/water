@@ -1,0 +1,8 @@
+site_name: Water CLI
+site_url: https://example.com/
+theme: readthedocs
+plugins:
+  - include-markdown
+nav:
+  - Home: index.md
+  - 'Integrating with docs': docs.md
