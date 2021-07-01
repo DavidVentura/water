@@ -13,13 +13,16 @@ class FlatObj:
     def fn4(self, arg1, arg2=5):
         pass
 
+    def no_args():
+        pass
+
 
 def test_namespace():
     res = Namespace.from_callable(FlatObj)
     assert res.name == 'FlatObj'
     assert res.members == []
-    assert len(res.callables) == 4
-    assert [c.name for c in res.callables] == ['fn1', 'fn2', 'fn3', 'fn4']
+    assert len(res.callables) == 5
+    assert [c.name for c in res.callables] == ['fn1', 'fn2', 'fn3', 'fn4', 'no_args']
     assert len(res.callables[0].args) == 1
     assert res.callables[0].args[0].name == 'number'
 
