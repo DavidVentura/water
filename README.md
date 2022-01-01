@@ -51,3 +51,22 @@ class NestedObj:
 res = execute_command(NestedObj, 'Inside1 fn1 --number 1')
 assert res == 1
 ```
+
+
+# Testing
+
+Python3.6:
+```
+docker build  -f dockerfiles/3.6-Dockerfile .
+```
+
+Python3.7+
+```
+poetry run pytest
+```
+
+# Releasing
+
+```
+poetry publish --build --username $PYPI_USERNAME --password $PYPI_PASSWORD
+```
