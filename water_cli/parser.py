@@ -4,7 +4,14 @@ import re
 import shlex
 
 from dataclasses import dataclass
-from typing import List, Dict, Callable, Any, Tuple, Optional, Union
+from typing import List, Dict, Callable, Any, Tuple, Optional, Union, NewType
+
+class Flag:
+    def __init__(self, checked):
+        self.checked = checked
+
+    def __bool__(self):
+        return self.checked
 
 def typing_get_args(a):
     return getattr(a, '__args__', None)
@@ -67,26 +74,29 @@ def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
     kwargs = {}
 
     i = 0
+    last_key = None
     while i < len(args):
         arg = args[i]
-        if not arg.startswith('--'):
+        if not arg.startswith('--') and last_key is None:
             raise BadArguments(f'Argument {arg} is neither a key (--option) nor a value')
 
         with_equal = re.match(r'(?P<flag>--[a-z0-9-_]+)=(?P<value>.+)', arg)
         if with_equal:
             k = with_equal.group('flag')
             v = with_equal.group('value')
-        else:
-            if i+1 == len(args):
-                raise BadArguments(f'Flag {arg} missing value')
+            k = k[2:]  # '--a' -> 'a'
+            k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
+            kwargs[k] = v
+        elif arg.startswith('--'):
             k = arg
-            v = args[i+1]
-            i += 1
-
-        k = k[2:]  # '--a' -> 'a'
-        k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
+            k = k[2:]  # '--a' -> 'a'
+            k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
+            kwargs[k] = None  # This enables 'flags' with no value
+            last_key = k
+        else:
+            kwargs[last_key] = arg
+            last_key = None
         i += 1
-        kwargs[k] = v
     return kwargs
 
 
@@ -110,6 +120,13 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)
+
+    for a in _callable.args:
+        if a.annotation == Flag:
+            if a.name in kwargs:
+                kwargs[a.name] = Flag(True)
+            else:
+                kwargs[a.name] = Flag(False)
 
     all_params = {a.name for a in _callable.args}
     needed_params = {a.name for a in _callable.args if a.default is inspect.Parameter.empty}
@@ -140,7 +157,6 @@ def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
 def cast(value: Any, annotation: Any):
     origin = typing_get_origin(annotation)
     args = typing_get_args(annotation)
-    # print(value, annotation, origin, args)
     if origin == Union:
         for arg in args:
             try:

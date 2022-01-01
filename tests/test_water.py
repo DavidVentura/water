@@ -1,7 +1,7 @@
 import pytest
 
 from typing import List, Optional, Union
-from water_cli.parser import execute_command, BadArguments
+from water_cli.parser import execute_command, BadArguments, Flag
 
 
 class Math1:
@@ -21,6 +21,11 @@ class Math1:
             return 0
         return sum(items)
 
+    def add_flag(self, a: int, b: float, plus_one: Flag):
+        if plus_one.checked:
+            return a + b + 1
+        return a + b
+
 
 class Str:
     def rev(self, items: List[str]):
@@ -35,6 +40,21 @@ class Str:
 
 def test_integration_primitive():
     res = execute_command(Math1, 'add --a 10 --b 5.1')
+    assert res == 15.1
+
+
+def test_integration_flag_present_last():
+    res = execute_command(Math1, 'add_flag --a 10 --b 5.1 --plus_one')
+    assert res == 16.1
+
+
+def test_integration_flag_present_first():
+    res = execute_command(Math1, 'add_flag --plus_one --a 10 --b 5.1')
+    assert res == 16.1
+
+
+def test_integration_flag_absent():
+    res = execute_command(Math1, 'add_flag --a 10 --b 5.1')
     assert res == 15.1
 
 

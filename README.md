@@ -18,6 +18,7 @@ Supported types:
 * enum
 * Union[]: gets casted to all options in order, first success is returned.
   * `Optional[type]` is `Union[type, NoneType]`
+* `water.Flag`: flag, only denotes the switch was present.
 
 # Examples
 

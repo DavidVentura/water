@@ -1,4 +1,3 @@
-from water_cli import __version__
 from water_cli.parser import Namespace
 from tests import module
 

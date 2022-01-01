@@ -1,19 +1,19 @@
-from water_cli.parser import parse, args_to_kwargs, Namespace
+from water_cli.parser import Namespace
 
 class FlatObj:
-    def fn1(self, number):
+    def fn1(self, number: int):
         pass
 
-    def fn2(self, *, number):
+    def fn2(self, *, number: int):
         pass
 
-    def fn3(self, arg1, arg2):
+    def fn3(self, arg1: int, arg2: int):
         pass
 
-    def fn4(self, arg1, arg2=5):
+    def fn4(self, arg1: int, arg2=5):
         pass
 
-    def no_args():
+    def no_args(self):
         pass
 
 
