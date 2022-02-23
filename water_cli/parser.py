@@ -101,6 +101,8 @@ def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
 
 
 def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str, Any]]:
+    if len(input_tokens) == 0:
+        raise BadArguments("Received no arguments")
     command, *args = input_tokens
 
     _members = {m.name: m for m in ns.members}

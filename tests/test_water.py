@@ -104,6 +104,12 @@ def test_integration_extra_args():
     assert "'c'" in str(e)
 
 
+def test_integration_no_args():
+    with pytest.raises(BadArguments) as e:
+        execute_command(Math1, '')
+        assert "Received no arguments" in str(e)
+
+
 def test_integration_missing_args():
     with pytest.raises(BadArguments) as e:
         execute_command(Math1, 'add --a 2')
