@@ -22,7 +22,7 @@ jobs:
       - name: Setup
         run: poetry install
       - name: Run tests
-        run: poetry run pytest --cov=water_cli tests/
+        run: poetry run pytest --cov=water_cli --cov-report=xml tests/
       - name: Run mypy
         run: poetry run mypy --strict water_cli/
       - name: Upload coverage
