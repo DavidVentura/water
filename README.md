@@ -1,5 +1,7 @@
 # Water
 
+[![codecov](https://codecov.io/gh/davidventura/water/branch/master/graph/badge.svg?token=m5obuvwZ0I)](https://codecov.io/gh/davidventura/water)
+
 Like [fire](https://github.com/google/python-fire)
 
 This python library parses classes so that they can be executed as commands.  
