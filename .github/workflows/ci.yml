@@ -25,3 +25,5 @@ jobs:
         run: poetry run pytest --cov=water_cli --cov-report=html tests/
       - name: Run mypy
         run: poetry run mypy --strict water_cli/
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
