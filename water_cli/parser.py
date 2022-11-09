@@ -4,19 +4,19 @@ import re
 import shlex
 
 from dataclasses import dataclass
-from typing import List, Dict, Callable, Any, Tuple, Optional, Union, NewType
+from typing import List, Dict, Callable, Any, Tuple, Optional, Union, Type
 
 class Flag:
-    def __init__(self, checked):
+    def __init__(self, checked: bool) -> None:
         self.checked = checked
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.checked
 
-def typing_get_args(a):
-    return getattr(a, '__args__', None)
+def typing_get_args(a: Any) -> List[Any]:
+    return getattr(a, '__args__', [])
 
-def typing_get_origin(a):
+def typing_get_origin(a: Any) -> Any:
     return getattr(a, '__origin__', a)
 
 
@@ -28,11 +28,11 @@ class BadArguments(ValueError):
 class MCallable:
     name: str
     args: List[inspect.Parameter]
-    fn: Callable
+    fn: Callable[..., Any]
     parent: 'Namespace'
 
     @staticmethod
-    def from_callable(callable_root, name, parent) -> 'MCallable':
+    def from_callable(callable_root: Callable[..., Any], name: str, parent: 'Namespace') -> 'MCallable':
         s = inspect.signature(callable_root)
         return MCallable(name=name,
                          args=list(s.parameters.values()),
@@ -48,7 +48,7 @@ class Namespace:
     parent: Optional['Namespace'] = None
 
     @staticmethod
-    def from_callable(callable_root, name=None, parent=None) -> 'Namespace':
+    def from_callable(callable_root: Callable[..., Any], name: Optional[str]=None, parent: Optional['Namespace']=None) -> 'Namespace':
         if not name:
             name = callable_root.__name__
         if inspect.isclass(callable_root):
@@ -71,7 +71,7 @@ class Namespace:
 
 
 def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
-    kwargs = {}
+    kwargs: Dict[str, Optional[str]] = {}
 
     i = 0
     last_key = None
@@ -82,8 +82,8 @@ def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
 
         with_equal = re.match(r'(?P<flag>--[a-z0-9-_]+)=(?P<value>.+)', arg)
         if with_equal:
-            k = with_equal.group('flag')
-            v = with_equal.group('value')
+            k = str(with_equal.group('flag'))
+            v = str(with_equal.group('value'))
             k = k[2:]  # '--a' -> 'a'
             k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
             kwargs[k] = v
@@ -94,6 +94,7 @@ def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
             kwargs[k] = None  # This enables 'flags' with no value
             last_key = k
         else:
+            assert last_key is not None
             kwargs[last_key] = arg
             last_key = None
         i += 1
@@ -111,7 +112,7 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
 
     _callables = {c.name: c for c in ns.callables}
     if command not in _callables:
-        hierarchy = []
+        hierarchy: List[str] = []
         parent = ns.parent
         while parent:
             hierarchy.insert(0, parent.name)
@@ -156,7 +157,7 @@ def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
 
     return c.fn(**casted)
 
-def cast(value: Any, annotation: Any):
+def cast(value: Any, annotation: Any) -> Any:
     origin = typing_get_origin(annotation)
     args = typing_get_args(annotation)
     if origin == Union:
@@ -178,6 +179,6 @@ def cast(value: Any, annotation: Any):
         value = annotation[value]
     return value
 
-def execute_command(c, input_command: str):
+def execute_command(c: Callable[..., Any], input_command: str) -> Any:
     parsed, kwargs = parse(Namespace.from_callable(c), input_command)
     return apply_args(parsed, kwargs)
