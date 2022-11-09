@@ -8,3 +8,4 @@ COPY water_cli /tmp/water_cli
 COPY tests /tmp/tests
 RUN ls
 RUN poetry run pytest
+RUN poetry run mypy --strict water_cli

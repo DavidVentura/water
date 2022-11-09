@@ -201,6 +201,14 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "types-dataclasses"
+version = "0.6.6"
+description = "Typing stubs for dataclasses"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "3.10.0.2"
 description = "Backported and Experimental Type Hints for Python 3.5+"
@@ -223,7 +231,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "72f0a6b8e4922a0b46eb6d1b135451a158ee131695bf3c3515edeb4b5ed9f6ff"
+content-hash = "1aff6b5eed6e13985e6c35c9cac0e5be6defe954fad723b506e2f1a430e61073"
 
 [metadata.files]
 atomicwrites = []
@@ -243,5 +251,6 @@ pytest = []
 pytest-cov = []
 tomli = []
 typed-ast = []
+types-dataclasses = []
 typing-extensions = []
 zipp = []
