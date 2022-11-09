@@ -1,7 +1,7 @@
 import pytest
 
 from typing import List, Optional, Union
-from water_cli.parser import execute_command, BadArguments, Flag
+from water_cli.parser import execute_command, BadArguments, Flag, Repeated
 
 
 class Math1:
@@ -25,6 +25,12 @@ class Math1:
         if plus_one.checked:
             return a + b + 1
         return a + b
+
+    def add_repeated(self, number: Repeated[float]):
+        return sum(number)
+
+    def add_repeated_factor(self, number: Repeated[float], factor: int = 1):
+        return sum(number) * factor
 
 
 class Str:
@@ -56,6 +62,21 @@ def test_integration_flag_present_first():
 def test_integration_flag_absent():
     res = execute_command(Math1, 'add_flag --a 10 --b 5.1')
     assert res == 15.1
+
+
+def test_integration_flag_repeated():
+    res = execute_command(Math1, 'add_repeated --number 10 --number 5')
+    assert res == 15.0
+
+
+def test_integration_flag_repeated_without_repeating():
+    res = execute_command(Math1, 'add_repeated --number 10')
+    assert res == 10
+
+
+def test_integration_flag_repeated_with_other_flag():
+    res = execute_command(Math1, 'add_repeated_factor --number 10 --factor 2')
+    assert res == 20
 
 
 def test_integration_typed():

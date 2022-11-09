@@ -19,6 +19,7 @@ Supported types:
 * Union[]: gets casted to all options in order, first success is returned.
   * `Optional[type]` is `Union[type, NoneType]`
 * `water.Flag`: flag, only denotes the switch was present.
+* `water.Repeated[T]`: Effectively the same as `List[T]` but allows flags to be repeated and values will be concatenated
 
 # Examples
 
@@ -26,10 +27,14 @@ Supported types:
 
 ```python
 class Math1:
+
     def add_list(self, items: Optional[List[int]] = None):
         if not items:
             return 0
         return sum(items)
+
+    def add_numbers(self, number: Repeated[int]):
+        return sum(number)
 
 # `items` casted to a list of `int`
 res = execute_command(Math1, 'add_list --items 1,2,3')
@@ -38,6 +43,14 @@ assert res == 6
 # `items` casted to a list of `int`, even though there is only one entry
 res = execute_command(Math1, 'add_list --items 1')
 assert res == 1
+
+# `number` casted to a list of `int`, even though there is only one entry
+res = execute_command(Math1, 'add_numbers --number 1')
+assert res == 1
+
+# `number` casted to a list of `int`, even though there is only one entry
+res = execute_command(Math1, 'add_numbers --number 1 --number 2')
+assert res == 3
 ```
 
 ## Nested commands

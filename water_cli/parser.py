@@ -4,7 +4,12 @@ import re
 import shlex
 
 from dataclasses import dataclass
-from typing import List, Dict, Callable, Any, Tuple, Optional, Union, Type
+from typing import List, Callable, Any, Tuple, Optional, Union, Dict, TypeVar
+
+T = TypeVar('T')
+
+class Repeated(List[T]):
+    pass
 
 class Flag:
     def __init__(self, checked: bool) -> None:
@@ -70,8 +75,8 @@ class Namespace:
         return ns
 
 
-def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
-    kwargs: Dict[str, Optional[str]] = {}
+def args_to_kwargs(args: List[str]) -> List[Tuple[str, Any]]:
+    kwargs: List[Tuple[str, Optional[str]]] = []
 
     i = 0
     last_key = None
@@ -86,17 +91,20 @@ def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
             v = str(with_equal.group('value'))
             k = k[2:]  # '--a' -> 'a'
             k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
-            kwargs[k] = v
+            kwargs.append((k, v))
         elif arg.startswith('--'):
             k = arg
             k = k[2:]  # '--a' -> 'a'
             k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
-            kwargs[k] = None  # This enables 'flags' with no value
+            kwargs.append((k, None))  # This enables 'flags' with no value
             last_key = k
         else:
-            assert last_key is not None
-            kwargs[last_key] = arg
-            last_key = None
+            for idx, (_key, _) in reversed(list(enumerate(kwargs))):
+                if _key == last_key:
+                    kwargs[idx] = (_key, arg)
+                    last_key = None
+                    break
+            assert last_key is None, "Somehow could not find what key to assign"
         i += 1
     return kwargs
 
@@ -123,17 +131,24 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)
+    rcvd_params = {key for key, _ in kwargs}
 
     for a in _callable.args:
+        origin = typing_get_origin(a.annotation)
         if a.annotation == Flag:
-            if a.name in kwargs:
-                kwargs[a.name] = Flag(True)
-            else:
-                kwargs[a.name] = Flag(False)
+            if a.name not in rcvd_params:
+                kwargs.append((a.name, Flag(False)))
+                continue
+
+            for idx, (k, _) in enumerate(kwargs):
+                if k == a.name:
+                    kwargs[idx] = (k, Flag(True))
+        elif origin == Repeated:
+            kwargs = _merge(kwargs, a.name)
 
     all_params = {a.name for a in _callable.args}
+    rcvd_params = {key for key, _ in kwargs}  # updated with flags
     needed_params = {a.name for a in _callable.args if a.default is inspect.Parameter.empty}
-    rcvd_params = set(kwargs.keys())
 
     missing_params = needed_params - rcvd_params
     extra_params = rcvd_params - all_params
@@ -142,8 +157,27 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
     elif extra_params:
         raise BadArguments(f"Too many parameters: {extra_params}")
 
-    return _callable, kwargs
+    return _callable, dict(kwargs)
 
+def _merge(kwargs: List[Tuple[str, Any]], key: str) -> List[Tuple[str, Any]]:
+    """
+    Merge key-value pairs which have a key matching `key`.
+
+    >>> _merge([('a', 1), ('b', 2), ('a', 3)])
+    [('b', 2), ('a', [1, 3])]
+    """
+    _buf = []
+    _ret = []
+    for k, v in kwargs:
+        if k != key:
+            _ret.append((k, v))
+            continue
+        _buf.append(v)
+
+    if _buf:
+        _ret.append((key, _buf))
+
+    return _ret
 
 def parse(ns: Namespace, input_command: str) -> Tuple[MCallable, Dict[str, Any]]:
     return _parse(ns, shlex.split(input_command))
@@ -171,6 +205,8 @@ def cast(value: Any, annotation: Any) -> Any:
         value = value.split(',')
         if len(args):
             value = [cast(i, args[0]) for i in value]
+    elif origin == Repeated:
+        value = [cast(i, args[0]) for i in value]
     elif annotation in [int, float]:
         value = annotation(value)
     elif annotation is bool:
