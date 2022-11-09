@@ -4,7 +4,12 @@ import re
 import shlex
 
 from dataclasses import dataclass
-from typing import List, Dict, Callable, Any, Tuple, Optional, Union, Type
+from typing import List, Callable, Any, Tuple, Optional, Union, Dict, TypeVar
+
+T = TypeVar('T')
+
+class Repeated(List[T]):
+    pass
 
 class Flag:
     def __init__(self, checked: bool) -> None:
@@ -71,7 +76,7 @@ class Namespace:
 
 
 def args_to_kwargs(args: List[str]) -> List[Tuple[str, Any]]:
-    kwargs = []
+    kwargs: List[Tuple[str, Optional[str]]] = []
 
     i = 0
     last_key = None
@@ -104,7 +109,7 @@ def args_to_kwargs(args: List[str]) -> List[Tuple[str, Any]]:
     return kwargs
 
 
-def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, List[Tuple[str, Any]]]:
+def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str, Any]]:
     if len(input_tokens) == 0:
         raise BadArguments("Received no arguments")
     command, *args = input_tokens
@@ -129,16 +134,17 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, List[Tupl
     rcvd_params = {key for key, _ in kwargs}
 
     for a in _callable.args:
-        if a.annotation != Flag:
-            continue
+        origin = typing_get_origin(a.annotation)
+        if a.annotation == Flag:
+            if a.name not in rcvd_params:
+                kwargs.append((a.name, Flag(False)))
+                continue
 
-        if a.name not in rcvd_params:
-            kwargs.append((a.name, Flag(False)))
-            continue
-
-        for idx, (k, _) in enumerate(kwargs):
-            if k == a.name:
-                kwargs[idx] = (k, Flag(True))
+            for idx, (k, _) in enumerate(kwargs):
+                if k == a.name:
+                    kwargs[idx] = (k, Flag(True))
+        elif origin == Repeated:
+            kwargs = _merge(kwargs, a.name)
 
     all_params = {a.name for a in _callable.args}
     rcvd_params = {key for key, _ in kwargs}  # updated with flags
@@ -151,17 +157,36 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, List[Tupl
     elif extra_params:
         raise BadArguments(f"Too many parameters: {extra_params}")
 
-    return _callable, kwargs
+    return _callable, dict(kwargs)
 
+def _merge(kwargs: List[Tuple[str, Any]], key: str) -> List[Tuple[str, Any]]:
+    """
+    Merge key-value pairs which have a key matching `key`.
 
-def parse(ns: Namespace, input_command: str) -> Tuple[MCallable, List[Tuple[str, Any]]]:
+    >>> _merge([('a', 1), ('b', 2), ('a', 3)])
+    [('b', 2), ('a', [1, 3])]
+    """
+    _buf = []
+    _ret = []
+    for k, v in kwargs:
+        if k != key:
+            _ret.append((k, v))
+            continue
+        _buf.append(v)
+
+    if _buf:
+        _ret.append((key, _buf))
+
+    return _ret
+
+def parse(ns: Namespace, input_command: str) -> Tuple[MCallable, Dict[str, Any]]:
     return _parse(ns, shlex.split(input_command))
 
 
-def apply_args(c: MCallable, kwargs: List[Tuple[str, Any]]) -> Any:
+def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
     casted = {}
     args_by_name = {a.name: a for a in c.args}
-    for k, v in kwargs:
+    for k, v in kwargs.items():
         casted[k] = cast(v, args_by_name[k].annotation)
 
     return c.fn(**casted)
@@ -180,6 +205,8 @@ def cast(value: Any, annotation: Any) -> Any:
         value = value.split(',')
         if len(args):
             value = [cast(i, args[0]) for i in value]
+    elif origin == Repeated:
+        value = [cast(i, args[0]) for i in value]
     elif annotation in [int, float]:
         value = annotation(value)
     elif annotation is bool:

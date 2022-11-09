@@ -3,7 +3,7 @@ import typing
 
 import pytest
 
-from water_cli.parser import cast
+from water_cli.parser import Repeated, cast
 
 class SomeEnum(enum.Enum):
     SOMETHING = enum.auto()
@@ -45,6 +45,9 @@ class SomeEnum(enum.Enum):
 
     (SomeEnum, 'SOMETHING', SomeEnum.SOMETHING),
     (SomeEnum, 'OTHER', SomeEnum.OTHER),
+
+    (Repeated[str], ["asd", "asd"], ["asd", "asd"]),
+    (Repeated[int], ["10", "20"], [10, 20]),
     ])
 def test_cast(_type, in_str, expected):
     assert cast(in_str, _type) == expected
