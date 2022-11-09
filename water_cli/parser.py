@@ -70,8 +70,8 @@ class Namespace:
         return ns
 
 
-def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
-    kwargs: Dict[str, Optional[str]] = {}
+def args_to_kwargs(args: List[str]) -> List[Tuple[str, Any]]:
+    kwargs = []
 
     i = 0
     last_key = None
@@ -86,22 +86,25 @@ def args_to_kwargs(args: List[str]) -> Dict[str, Any]:
             v = str(with_equal.group('value'))
             k = k[2:]  # '--a' -> 'a'
             k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
-            kwargs[k] = v
+            kwargs.append((k, v))
         elif arg.startswith('--'):
             k = arg
             k = k[2:]  # '--a' -> 'a'
             k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
-            kwargs[k] = None  # This enables 'flags' with no value
+            kwargs.append((k, None))  # This enables 'flags' with no value
             last_key = k
         else:
-            assert last_key is not None
-            kwargs[last_key] = arg
-            last_key = None
+            for idx, (_key, _) in reversed(list(enumerate(kwargs))):
+                if _key == last_key:
+                    kwargs[idx] = (_key, arg)
+                    last_key = None
+                    break
+            assert last_key is None, "Somehow could not find what key to assign"
         i += 1
     return kwargs
 
 
-def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str, Any]]:
+def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, List[Tuple[str, Any]]]:
     if len(input_tokens) == 0:
         raise BadArguments("Received no arguments")
     command, *args = input_tokens
@@ -123,17 +126,23 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)
+    rcvd_params = {key for key, _ in kwargs}
 
     for a in _callable.args:
-        if a.annotation == Flag:
-            if a.name in kwargs:
-                kwargs[a.name] = Flag(True)
-            else:
-                kwargs[a.name] = Flag(False)
+        if a.annotation != Flag:
+            continue
+
+        if a.name not in rcvd_params:
+            kwargs.append((a.name, Flag(False)))
+            continue
+
+        for idx, (k, _) in enumerate(kwargs):
+            if k == a.name:
+                kwargs[idx] = (k, Flag(True))
 
     all_params = {a.name for a in _callable.args}
+    rcvd_params = {key for key, _ in kwargs}  # updated with flags
     needed_params = {a.name for a in _callable.args if a.default is inspect.Parameter.empty}
-    rcvd_params = set(kwargs.keys())
 
     missing_params = needed_params - rcvd_params
     extra_params = rcvd_params - all_params
@@ -145,14 +154,14 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
     return _callable, kwargs
 
 
-def parse(ns: Namespace, input_command: str) -> Tuple[MCallable, Dict[str, Any]]:
+def parse(ns: Namespace, input_command: str) -> Tuple[MCallable, List[Tuple[str, Any]]]:
     return _parse(ns, shlex.split(input_command))
 
 
-def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
+def apply_args(c: MCallable, kwargs: List[Tuple[str, Any]]) -> Any:
     casted = {}
     args_by_name = {a.name: a for a in c.args}
-    for k, v in kwargs.items():
+    for k, v in kwargs:
         casted[k] = cast(v, args_by_name[k].annotation)
 
     return c.fn(**casted)
