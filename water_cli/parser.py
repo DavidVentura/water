@@ -4,6 +4,9 @@ import re
 import shlex
 
 from dataclasses import dataclass
+from water_cli.exceptions import (BadArguments, BadSubcommand, UnexpectedParameters, MissingParameters,
+                                  ConsecutiveValues, UnexpectedValue
+                                  )
 from typing import List, Callable, Any, Tuple, Optional, Union, Dict, TypeVar
 
 T = TypeVar('T')
@@ -23,10 +26,6 @@ def typing_get_args(a: Any) -> List[Any]:
 
 def typing_get_origin(a: Any) -> Any:
     return getattr(a, '__origin__', a)
-
-
-class BadArguments(ValueError):
-    pass
 
 
 @dataclass
@@ -80,10 +79,14 @@ def args_to_kwargs(args: List[str]) -> List[Tuple[str, Any]]:
 
     i = 0
     last_key = None
+    last_value = None
+    current_key = None
     while i < len(args):
         arg = args[i]
-        if not arg.startswith('--') and last_key is None:
-            raise BadArguments(f'Argument {arg} is neither a key (--option) nor a value')
+        if not arg.startswith('--') and current_key is None:
+            if last_key and last_value:
+                raise ConsecutiveValues(last_key, last_value, arg)
+            raise UnexpectedValue(arg)
 
         with_equal = re.match(r'(?P<flag>--[a-z0-9-_]+)=(?P<value>.+)', arg)
         if with_equal:
@@ -92,19 +95,24 @@ def args_to_kwargs(args: List[str]) -> List[Tuple[str, Any]]:
             k = k[2:]  # '--a' -> 'a'
             k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
             kwargs.append((k, v))
+            last_key = k
+            last_value = v
         elif arg.startswith('--'):
             k = arg
             k = k[2:]  # '--a' -> 'a'
             k = k.replace('-', '_')  # '--a-thing' -> 'a_thing'
             kwargs.append((k, None))  # This enables 'flags' with no value
+            current_key = k
             last_key = k
         else:
             for idx, (_key, _) in reversed(list(enumerate(kwargs))):
-                if _key == last_key:
+                if _key == current_key:
                     kwargs[idx] = (_key, arg)
-                    last_key = None
+                    last_key = _key
+                    last_value = arg
+                    current_key = None
                     break
-            assert last_key is None, "Somehow could not find what key to assign"
+            assert current_key is None, "Somehow could not find what key to assign"
         i += 1
     return kwargs
 
@@ -125,9 +133,8 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
         while parent:
             hierarchy.insert(0, parent.name)
             parent = parent.parent
-        _hierarchy = ' '.join(hierarchy[1:]) + ' '
 
-        raise BadArguments(f"'{_hierarchy}{ns.name}' has no sub-command '{command}'")
+        raise BadSubcommand(hierarchy + [ns.name], command)
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)
@@ -153,9 +160,9 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
     missing_params = needed_params - rcvd_params
     extra_params = rcvd_params - all_params
     if missing_params:
-        raise BadArguments(f"No parameters for {missing_params}")
+        raise MissingParameters(list(sorted(missing_params)))
     elif extra_params:
-        raise BadArguments(f"Too many parameters: {extra_params}")
+        raise UnexpectedParameters(list(sorted(extra_params)))
 
     return _callable, dict(kwargs)
 
