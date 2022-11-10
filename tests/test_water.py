@@ -22,7 +22,7 @@ class Math1:
         return sum(items)
 
     def add_flag(self, a: int, b: float, plus_one: Flag):
-        if plus_one.checked:
+        if plus_one:
             return a + b + 1
         return a + b
 
