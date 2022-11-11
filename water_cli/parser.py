@@ -134,7 +134,7 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
             hierarchy.insert(0, parent.name)
             parent = parent.parent
 
-        raise BadSubcommand(hierarchy + [ns.name], command)
+        raise BadSubcommand(hierarchy + [ns.name], command, list(_callables))
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)

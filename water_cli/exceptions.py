@@ -4,12 +4,15 @@ class BadArguments(ValueError):
     pass
 
 class BadSubcommand(BadArguments):
-    def __init__(self, parent: List[str], attempted: str):
+    def __init__(self, parent: List[str], attempted: str, valid_options: List[str]):
         self.parent = parent
         self.attempted = attempted
+        self.valid_options = valid_options
 
     def __str__(self) -> str:
-        return f"'{' '.join(self.parent)}' has no sub-command '{self.attempted}'"
+        if len(self.parent) > 1:
+            return f"'{' '.join(self.parent[1:])}' has no sub-command '{self.attempted}'."
+        return f"No top-level command '{self.attempted}'."
 
 class MissingParameters(BadArguments):
     def __init__(self, params: List[str]):

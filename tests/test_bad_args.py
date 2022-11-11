@@ -24,7 +24,7 @@ def test_no_subcommand_toplevel():
         execute_command(Math1, 'this_does_not_exist --a 10 --b 5.1')
     assert e.value.parent == ['Math1']
     assert e.value.attempted == 'this_does_not_exist'
-    assert str(e.value) == "'Math1' has no sub-command 'this_does_not_exist'"
+    assert str(e.value) == "No top-level command 'this_does_not_exist'."
 
 
 def test_no_subcommand_nested():
@@ -32,6 +32,7 @@ def test_no_subcommand_nested():
         execute_command(Math1, 'Math2 this_does_not_exist --a 10 --b 5.1')
     assert e.value.parent == ['Math1', 'Math2']
     assert e.value.attempted == 'this_does_not_exist'
+    assert str(e.value) == "'Math2' has no sub-command 'this_does_not_exist'."
 
 
 def test_value_without_flag():
