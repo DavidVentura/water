@@ -1,7 +1,7 @@
 import pytest
 
 from typing import List, Optional, Union
-from water_cli.parser import execute_command, BadArguments, Flag, Repeated
+from water_cli.parser import execute_command, BadArguments, Flag, Repeated, MissingValues
 
 
 class Math1:
@@ -15,6 +15,9 @@ class Math1:
         if double:
             return 2*a
         return a
+
+    def add_list_req(self, items: List[int]):
+        return sum(items)
 
     def add_list(self, items: Optional[List[int]] = None):
         if not items:
@@ -102,6 +105,12 @@ def test_integration_default_falsy():
 def test_integration_override_default_truthy():
     res = execute_command(Math1, 'double_if_truthy --a 1')
     assert res == 1
+
+
+def test_integration_missing_list_value():
+    with pytest.raises(MissingValues) as e:
+        execute_command(Math1, 'add_list_req --items')
+    assert str(e.value) == 'Missing values for parameters: --items'
 
 
 def test_integration_override_default_compound_type_1():
