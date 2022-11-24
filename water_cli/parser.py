@@ -5,7 +5,7 @@ import shlex
 
 from dataclasses import dataclass
 from water_cli.exceptions import (BadArguments, BadSubcommand, UnexpectedParameters, MissingParameters,
-                                  ConsecutiveValues, UnexpectedValue
+                                  ConsecutiveValues, UnexpectedValue, MissingValues,
                                   )
 from typing import List, Callable, Any, Tuple, Optional, Union, Dict, TypeVar
 
@@ -152,6 +152,10 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
                     kwargs[idx] = (k, Flag(True))
         elif origin == Repeated:
             kwargs = _merge(kwargs, a.name)
+
+    missing_values = [k for k, v in kwargs if v is None]
+    if missing_values:
+        raise MissingValues(list(sorted(missing_values)))
 
     all_params = {a.name for a in _callable.args}
     rcvd_params = {key for key, _ in kwargs}  # updated with flags

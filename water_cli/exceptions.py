@@ -21,6 +21,13 @@ class MissingParameters(BadArguments):
         _params = [f'--{p}' for p in self.params]
         return f"Missing parameters: {', '.join(_params)}"
 
+class MissingValues(BadArguments):
+    def __init__(self, params: List[str]):
+        self.params = params
+    def __str__(self) -> str:
+        _params = [f'--{p}' for p in self.params]
+        return f"Missing values for parameters: {', '.join(_params)}"
+
 class UnexpectedValue(BadArguments):
     def __init__(self, value: str):
         self.value = value
