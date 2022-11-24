@@ -1,7 +1,9 @@
 import pytest
 
 from typing import List, Optional, Union
+from water_cli.exceptions import WantsHelp
 from water_cli.parser import execute_command, BadArguments, Flag, Repeated
+from water_cli.help_flag import add_help_flag
 
 
 class Math1:
@@ -31,6 +33,13 @@ class Math1:
 
     def add_repeated_factor(self, number: Repeated[float], factor: int = 1):
         return sum(number) * factor
+
+    @add_help_flag
+    def add_with_help(self, a: int, b: float):
+        """
+        This is some doc
+        """
+        return a + b
 
 
 class Str:
@@ -145,3 +154,20 @@ def test_values_with_spaces_quoted():
 def test_values_with_spaces():
     res = execute_command(Str, r'spaces_to_dashes --text this\ text\ has\ spaces')
     assert res == 'this-text-has-spaces'
+
+
+def test_help_without_calling_help():
+    res = execute_command(Math1, 'add_with_help --a 6 --b 7')
+    assert res == 13
+
+
+def test_help_calling_help():
+    with pytest.raises(WantsHelp) as e:
+        execute_command(Math1, 'add_with_help --help')
+    assert e.value.docstring.strip() == "This is some doc"
+
+
+def test_help_calling_help_also_args():
+    with pytest.raises(WantsHelp) as e:
+        _ = execute_command(Math1, 'add_with_help --help --a 6 --b 7')
+    assert e.value.docstring.strip() == "This is some doc"

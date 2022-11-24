@@ -5,7 +5,7 @@ import shlex
 
 from dataclasses import dataclass
 from water_cli.exceptions import (BadArguments, BadSubcommand, UnexpectedParameters, MissingParameters,
-                                  ConsecutiveValues, UnexpectedValue
+                                  ConsecutiveValues, UnexpectedValue, WantsHelp,
                                   )
 from typing import List, Callable, Any, Tuple, Optional, Union, Dict, TypeVar
 
@@ -20,6 +20,9 @@ class Flag:
 
     def __bool__(self) -> bool:
         return self.checked
+
+class HelpType:
+    pass
 
 def typing_get_args(a: Any) -> List[Any]:
     return getattr(a, '__args__', [])
@@ -152,6 +155,9 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
                     kwargs[idx] = (k, Flag(True))
         elif origin == Repeated:
             kwargs = _merge(kwargs, a.name)
+        elif origin == HelpType:
+            if a.name in rcvd_params:
+                raise WantsHelp(_callable.fn)
 
     all_params = {a.name for a in _callable.args}
     rcvd_params = {key for key, _ in kwargs}  # updated with flags

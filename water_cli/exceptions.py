@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable, Any
 
 class BadArguments(ValueError):
     pass
@@ -43,3 +43,8 @@ class ConsecutiveValues(BadArguments):
     def __str__(self) -> str:
         return (f'Attempted to pass multiple values to option (--{self.last_key} {self.last_value} {self.attempted}). '
                 f'Did you mean --{self.attempted}?')
+
+class WantsHelp(Exception):
+    def __init__(self, c: Callable[..., Any]) -> None:
+        assert c.__doc__ is not None
+        self.docstring = c.__doc__
