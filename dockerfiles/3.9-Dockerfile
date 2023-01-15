@@ -4,6 +4,7 @@ ADD pyproject.toml /tmp/
 ADD README.md /tmp/
 WORKDIR /tmp/
 RUN poetry install --no-interaction
+COPY examples /tmp/examples
 COPY water_cli /tmp/water_cli
 COPY tests /tmp/tests
 RUN ls

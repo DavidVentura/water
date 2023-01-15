@@ -5,7 +5,7 @@ import shlex
 
 from dataclasses import dataclass
 from water_cli.exceptions import (BadArguments, BadSubcommand, UnexpectedParameters, MissingParameters,
-                                  ConsecutiveValues, UnexpectedValue, MissingValues,
+                                  ConsecutiveValues, UnexpectedValue, MissingValues, IncorrectType,
                                   )
 from typing import List, Callable, Any, Tuple, Optional, Union, Dict, TypeVar
 
@@ -134,7 +134,8 @@ def _parse(ns: Namespace, input_tokens: List[str]) -> Tuple[MCallable, Dict[str,
             hierarchy.insert(0, parent.name)
             parent = parent.parent
 
-        raise BadSubcommand(hierarchy + [ns.name], command, list(_callables))
+        _member_names = [m.name for m in ns.members]
+        raise BadSubcommand(hierarchy + [ns.name], command, list(_callables) + _member_names)
 
     _callable = _callables[command]
     kwargs = args_to_kwargs(args)
@@ -198,7 +199,12 @@ def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
     casted = {}
     args_by_name = {a.name: a for a in c.args}
     for k, v in kwargs.items():
-        casted[k] = cast(v, args_by_name[k].annotation)
+        try:
+            casted[k] = cast(v, args_by_name[k].annotation)
+        except Exception as e:
+            a = args_by_name[k].annotation
+            _typename = getattr(a, '__name__', str(a))
+            raise IncorrectType(_typename, v, e)
 
     return c.fn(**casted)
 

@@ -1,7 +1,7 @@
 import pytest
 
 from water_cli.parser import execute_command, args_to_kwargs
-from water_cli.exceptions import BadArguments, BadSubcommand, ConsecutiveValues, MissingParameters, UnexpectedParameters, UnexpectedValue
+from water_cli.exceptions import BadArguments, BadSubcommand, ConsecutiveValues, IncorrectType, MissingParameters, UnexpectedParameters, UnexpectedValue
 
 class Math1:
     class Math2:
@@ -24,6 +24,7 @@ def test_no_subcommand_toplevel():
         execute_command(Math1, 'this_does_not_exist --a 10 --b 5.1')
     assert e.value.parent == ['Math1']
     assert e.value.attempted == 'this_does_not_exist'
+    assert e.value.valid_options == ['add', 'add2', 'Math2']
     assert str(e.value) == "No top-level command 'this_does_not_exist'."
 
 
@@ -32,6 +33,7 @@ def test_no_subcommand_nested():
         execute_command(Math1, 'Math2 this_does_not_exist --a 10 --b 5.1')
     assert e.value.parent == ['Math1', 'Math2']
     assert e.value.attempted == 'this_does_not_exist'
+    assert e.value.valid_options == ['sub']
     assert str(e.value) == "'Math2' has no sub-command 'this_does_not_exist'."
 
 
@@ -78,3 +80,12 @@ def test_unexpected_parameters_multiple():
         execute_command(Math1, 'add --a 10 --b 20 --c 30 --d 40')
     assert e.value.params == ['c', 'd']
     assert str(e.value) == 'Unexpected parameters: --c, --d'
+
+
+def test_bad_argument_conversion():
+    with pytest.raises(IncorrectType) as e:
+        execute_command(Math1, 'add --a 10 --b "a string"')
+    assert e.value.expected_type == 'float'
+    assert e.value.provided_value == 'a string'
+    assert str(e.value.conversion_error) == "could not convert string to float: 'a string'"
+    assert str(e.value) == "Unable to convert 'a string' to type 'float': could not convert string to float: 'a string'"

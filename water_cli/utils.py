@@ -1,12 +1,14 @@
 import sys
+import shlex
 from functools import wraps
 from typing import List, Any, Tuple, Dict, Iterable, Callable, TypeVar, Any
 if sys.version_info < (3, 10):
     from typing_extensions import ParamSpec
 else:
     from typing import ParamSpec
-from water_cli.parser import Flag, MCallable
+from water_cli.parser import Flag, MCallable, execute_command
 from water_cli.exceptions import ExclusiveFlags, MissingRequiredCombination
+import water_cli.exceptions
 
 R = TypeVar('R')
 P = ParamSpec('P')
@@ -85,3 +87,12 @@ def required_together(_flags_list: List[Tuple[str, ...]]) -> Any:
         return wrapped
 
     return wrapper
+
+def simple_cli(c: Callable[..., Any]) -> None:
+    try:
+        res = execute_command(c, shlex.join(sys.argv[1:]))
+        print(res)
+    except water_cli.exceptions.BadSubcommand as bs:
+        print(bs, 'Try any of:', bs.valid_options)
+    except water_cli.exceptions.BadArguments as e:
+        print(e)

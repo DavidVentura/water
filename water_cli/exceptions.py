@@ -67,3 +67,11 @@ class MissingRequiredCombination(BadArguments):
         _present_params = [f'--{p}' for p in self.present_flags]
         _missing_params = [f'--{p}' for p in self.required_combination]
         return f"Passing the flags {', '.join(_present_params)} also requires the flags: {', '.join(_missing_params)} to be provided"
+
+class IncorrectType(BadArguments):
+    def __init__(self, expected_type: str, provided_value: str, conversion_error: Exception):
+        self.expected_type = expected_type
+        self.provided_value = provided_value
+        self.conversion_error = conversion_error
+    def __str__(self) -> str:
+        return f"Unable to convert '{self.provided_value}' to type '{self.expected_type}': {str(self.conversion_error)}"

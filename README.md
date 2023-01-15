@@ -32,49 +32,55 @@ Supported types:
 
 # Examples
 
-## Type casting
+An example on a simple class
 
 ```python
-class Math1:
+import water_cli
 
-    def add_list(self, items: Optional[List[int]] = None):
-        if not items:
-            return 0
-        return sum(items)
+class Calculator:
+  """A simple calculator class."""
 
-    def add_numbers(self, number: Repeated[int]):
-        return sum(number)
+  def double(self, number: int):
+    return 2 * number
 
-# `items` casted to a list of `int`
-res = execute_command(Math1, 'add_list --items 1,2,3')
-assert res == 6
-
-# `items` casted to a list of `int`, even though there is only one entry
-res = execute_command(Math1, 'add_list --items 1')
-assert res == 1
-
-# `number` casted to a list of `int`, even though there is only one entry
-res = execute_command(Math1, 'add_numbers --number 1')
-assert res == 1
-
-# `number` casted to a list of `int`, even though there is only one entry
-res = execute_command(Math1, 'add_numbers --number 1 --number 2')
-assert res == 3
+if __name__ == '__main__':
+    water_cli.simple_cli(Calculator)
 ```
 
-## Nested commands
+```bash
+$ python3 examples/calculator.py double --number 10
+20
+$ python3 examples/calculator.py double --number banana
+Unable to convert 'banana' to type 'int': invalid literal for int() with base 10: 'banana'
+```
+
+An example on a nested class
 
 ```python
-class NestedObj:
-    class Inside1:
-        def fn1(self, number: int):
-            return number
+import water_cli
 
-res = execute_command(NestedObj, 'Inside1 fn1 --number 1')
-assert res == 1
+class Tools:
+    class Calculator:
+      """A simple calculator class."""
+
+      def double(self, number: int):
+        return 2 * number
+
+    class String:
+        """A simple string utility class."""
+        def reverse(self, string: str):
+            return string[::-1]
+
+if __name__ == '__main__':
+    water_cli.simple_cli(Tools)
 ```
 
-
+```bash
+$ python3 examples/namespaces.py String reverse --string "some long string"
+gnirts gnol emos
+$ python3 examples/namespaces.py Calculator double --number 10
+20
+```
 # Testing
 
 Python3.9, 3.11:
