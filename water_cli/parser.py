@@ -33,10 +33,10 @@ class MCallable:
     name: str
     args: List[inspect.Parameter]
     fn: Callable[..., Any]
-    parent: 'Namespace'
+    parent: Optional['Namespace']
 
     @staticmethod
-    def from_callable(callable_root: Callable[..., Any], name: str, parent: 'Namespace') -> 'MCallable':
+    def from_callable(callable_root: Callable[..., Any], name: str, parent: Optional['Namespace']) -> 'MCallable':
         s = inspect.signature(callable_root)
         return MCallable(name=name,
                          args=list(s.parameters.values()),

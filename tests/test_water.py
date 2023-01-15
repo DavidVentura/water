@@ -2,6 +2,8 @@ import pytest
 
 from typing import List, Optional, Union
 from water_cli.parser import execute_command, BadArguments, Flag, Repeated, MissingValues
+from water_cli.utils import exclusive_flags, required_together
+from water_cli.exceptions import ExclusiveFlags, MissingRequiredCombination
 
 
 class Math1:
@@ -46,6 +48,22 @@ class Str:
     def spaces_to_dashes(self, text: str):
         return text.replace(' ', '-')
 
+    @exclusive_flags([('reverse', 'crop_4')])
+    def modify(self, value: str, reverse: Flag, crop_4: Flag):
+        if reverse:
+            return value[::-1]
+        if crop_4:
+            return value[:4]
+        return value
+
+    @required_together([('uppercase', 'word_nr')])
+    def upper_word_sometimes(self, value: str, uppercase: Flag, word_nr: Optional[int] = None):
+        if uppercase:
+            assert word_nr is not None
+            parts = value.split()
+            parts[word_nr] = parts[word_nr].upper()
+            return ' '.join(parts)
+        return value
 
 def test_integration_primitive():
     res = execute_command(Math1, 'add --a 10 --b 5.1')
@@ -154,3 +172,27 @@ def test_values_with_spaces_quoted():
 def test_values_with_spaces():
     res = execute_command(Str, r'spaces_to_dashes --text this\ text\ has\ spaces')
     assert res == 'this-text-has-spaces'
+
+
+def test_exclusive_flags_no_conflict():
+    res = execute_command(Str, 'modify --value some_string --reverse')
+    assert res == 'gnirts_emos'
+
+
+def test_exclusive_flags_conflict():
+    with pytest.raises(ExclusiveFlags) as e:
+        execute_command(Str, 'modify --value some_string --reverse --crop_4')
+    assert e.value.exclusive_flags == ('reverse' , 'crop_4')
+    assert "can't be provided at the same time" in str(e.value)
+
+
+def test_required_combinations_no_conflict():
+    res = execute_command(Str, 'upper_word_sometimes --value "this is a sentence"')
+    assert res == 'this is a sentence'
+    res = execute_command(Str, 'upper_word_sometimes --value "this is a sentence" --uppercase --word_nr 3')
+    assert res == 'this is a SENTENCE'
+
+
+def test_required_combinations_conflict():
+    with pytest.raises(MissingRequiredCombination) as e:
+        execute_command(Str, 'upper_word_sometimes --value "this is a sentence" --uppercase')

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 class BadArguments(ValueError):
     pass
@@ -50,3 +50,20 @@ class ConsecutiveValues(BadArguments):
     def __str__(self) -> str:
         return (f'Attempted to pass multiple values to option (--{self.last_key} {self.last_value} {self.attempted}). '
                 f'Did you mean --{self.attempted}?')
+
+class ExclusiveFlags(BadArguments):
+    def __init__(self, exclusive_flags: Tuple[str, ...]):
+        self.exclusive_flags = exclusive_flags
+    def __str__(self) -> str:
+        _params = [f'--{p}' for p in self.exclusive_flags]
+        return f"The flags: {', '.join(_params)} can't be provided at the same time"
+
+class MissingRequiredCombination(BadArguments):
+    def __init__(self, present_flags: Tuple[str, ...], required_combination: Tuple[str, ...]):
+        self.present_flags = present_flags
+        self.required_combination = required_combination
+
+    def __str__(self) -> str:
+        _present_params = [f'--{p}' for p in self.present_flags]
+        _missing_params = [f'--{p}' for p in self.required_combination]
+        return f"Passing the flags {', '.join(_present_params)} also requires the flags: {', '.join(_missing_params)} to be provided"

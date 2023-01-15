@@ -23,6 +23,13 @@ Supported types:
 * `water.Flag`: flag, only denotes the switch was present.
 * `water.Repeated[T]`: Effectively the same as `List[T]` but allows flags to be repeated and values will be concatenated
 
+## Utilities
+
+* `exclusive_flags` forbids certain flag combinations to be used at the same time.
+  * If `--a` and `--b` are exclusive, executing `command --a --b` causes an error.
+* `required_together` requires certain flag combinations to be used at the same time.
+  * If `--a` and `--b` are required together, executing `command --a` or `command --b` causes an error.
+
 # Examples
 
 ## Type casting
