@@ -77,12 +77,13 @@ assert res == 1
 
 # Testing
 
-Python3.6:
+Python3.9, 3.11:
 ```
-docker build  -f dockerfiles/3.6-Dockerfile .
+docker build -f dockerfiles/3.9-Dockerfile .
+docker build -f dockerfiles/3.11-Dockerfile .
 ```
 
-Python3.7+
+Development
 ```
 poetry run pytest
 ```
