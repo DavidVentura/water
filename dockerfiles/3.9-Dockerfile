@@ -1,0 +1,11 @@
+FROM python:3.9-slim-bullseye
+RUN pip3.9 install poetry
+ADD pyproject.toml /tmp/
+ADD README.md /tmp/
+WORKDIR /tmp/
+RUN poetry install --no-interaction
+COPY water_cli /tmp/water_cli
+COPY tests /tmp/tests
+RUN ls
+RUN poetry run pytest
+RUN poetry run mypy --strict water_cli
