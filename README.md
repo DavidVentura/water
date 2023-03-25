@@ -2,86 +2,52 @@
 
 [![codecov](https://codecov.io/gh/davidventura/water/branch/master/graph/badge.svg?token=m5obuvwZ0I)](https://codecov.io/gh/davidventura/water)
 
-Like [fire](https://github.com/google/python-fire)
+Water is a Python library that allows you to generate command-line interfaces (CLIs) for your Python project. Water is similar to the [Google Fire](https://github.com/google/python-fire) library, with some key differences:
 
-This python library parses classes so that they can be executed as commands.  
-In contrast with fire, there is no "automatic" type casting -- the type casting is 100% based on type hints.
+- Water is type-safe. This means that Water uses type annotations to ensure that the input values are of the correct type.
+- Water is designed with easy integration testing in mind. This means that you can easily test your Water CLI by invoking it from your test code, making it simple to write thorough and comprehensive tests for your CLI.
 
-## Type casting
+## Installation
 
-When calling `execute_command` the values passed in the command get casted to the annotated types on the function
-signature.
+To install Water, use `pip`:
 
-Supported types:
+```
+pip install water-cli
+```
 
-* int, float
-* bool: the strings `['true', '1', 't', 'y']` are considered true.
-* lists, tuples: input is split by comma (`,`) and each element is casted independently.
-* enum
-* Union[]: gets casted to all options in order, first success is returned.
-  * `Optional[type]` is `Union[type, NoneType]`
-* `water.Flag`: flag, only denotes the switch was present.
-* `water.Repeated[T]`: Effectively the same as `List[T]` but allows flags to be repeated and values will be concatenated
 
-## Utilities
+## Getting started
 
-* `exclusive_flags` forbids certain flag combinations to be used at the same time.
-  * If `--a` and `--b` are exclusive, executing `command --a --b` causes an error.
-* `required_together` requires certain flag combinations to be used at the same time.
-  * If `--a` and `--b` are required together, executing `command --a` or `command --b` causes an error.
-
-# Examples
-
-An example on a simple class
+Here's a simple example of how to use Water:
 
 ```python
 import water_cli
 
-class Calculator:
-  """A simple calculator class."""
-
-  def double(self, number: int):
-    return 2 * number
+def greet(name: str):
+    print(f"Hello, {name}!")
 
 if __name__ == '__main__':
-    water_cli.simple_cli(Calculator)
+    water_cli.simple_cli(greet)
 ```
 
-```bash
-$ python3 examples/calculator.py double --number 10
-20
-$ python3 examples/calculator.py double --number banana
-Unable to convert 'banana' to type 'int': invalid literal for int() with base 10: 'banana'
-```
+In this example, we define a function called greet that takes a single argument, name, with type str.
 
-An example on a nested class
+When we run the script with `python script.py greet --name Alice`, Water will call the greet function with `name='Alice'`.
 
-```python
-import water_cli
+## Advanced usage
 
-class Tools:
-    class Calculator:
-      """A simple calculator class."""
+Water also supports more advanced features, such as mutually exclusive flags and required flag groups. Here's an example:
 
-      def double(self, number: int):
-        return 2 * number
 
-    class String:
-        """A simple string utility class."""
-        def reverse(self, string: str):
-            return string[::-1]
+## Contributing
 
-if __name__ == '__main__':
-    water_cli.simple_cli(Tools)
-```
+If you find a bug or have a feature request, please open an issue on the GitHub repository. Pull requests are also welcome!
 
-```bash
-$ python3 examples/namespaces.py String reverse --string "some long string"
-gnirts gnol emos
-$ python3 examples/namespaces.py Calculator double --number 10
-20
-```
-# Testing
+## License
+
+Water is licensed under the MIT License.
+
+## Testing
 
 Python3.9, 3.11:
 ```
@@ -94,7 +60,7 @@ Development
 poetry run pytest
 ```
 
-# Releasing
+## Releasing
 
 ```
 poetry publish --build --username $PYPI_USERNAME --password $PYPI_PASSWORD

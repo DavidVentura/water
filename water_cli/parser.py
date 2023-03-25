@@ -3,6 +3,7 @@ import inspect
 import re
 import shlex
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from water_cli.exceptions import (BadArguments, BadSubcommand, UnexpectedParameters, MissingParameters,
                                   ConsecutiveValues, UnexpectedValue, MissingValues, IncorrectType,
@@ -55,6 +56,8 @@ class Namespace:
     def from_callable(callable_root: Callable[..., Any], name: Optional[str]=None, parent: Optional['Namespace']=None) -> 'Namespace':
         if not name:
             name = callable_root.__name__
+        if inspect.isfunction(callable_root):
+            return Namespace(name, members=[], callables=[MCallable.from_callable(callable_root, name, parent=None)])
         if inspect.isclass(callable_root):
             callable_root = callable_root()
 
