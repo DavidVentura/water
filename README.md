@@ -1,6 +1,7 @@
 # Water
 
 [![codecov](https://codecov.io/gh/davidventura/water/branch/master/graph/badge.svg?token=m5obuvwZ0I)](https://codecov.io/gh/davidventura/water)
+[![Documentation Status](https://readthedocs.org/projects/water-cli/badge/?version=latest)](https://water-cli.readthedocs.io/en/latest/?badge=latest)
 
 Water is a Python library that allows you to generate command-line interfaces (CLIs) for your Python project. Water is similar to the [Google Fire](https://github.com/google/python-fire) library, with some key differences:
 
