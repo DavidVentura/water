@@ -1,6 +1,7 @@
 import tempfile
 import subprocess
 import shlex
+import glob
 
 import pytest
 
@@ -55,6 +56,8 @@ def _parse_run_script(script: str) -> List[RunScript]:
     if cur_args:
         results.append(RunScript(cur_args, '\n'.join(cur_output)))
 
+    assert len(results) > 0, f'Could not parse any script out of {script}'
+
     return results
 
 
@@ -96,10 +99,7 @@ def _parse(fnames: List[str]) -> List[ExampleWithArgs]:
     return ret
 
 
-@pytest.mark.parametrize('example', _parse([
-    'docs/getting-started.md',
-    'docs/usage.md',
-    ]))
+@pytest.mark.parametrize('example', _parse(glob.glob('docs/*.md')))
 def test_python_code_blocks_execute_with_bash_arguments(example):
     with tempfile.NamedTemporaryFile(mode='w') as ntf:
         ntf.write(example.src)
