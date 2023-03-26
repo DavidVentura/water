@@ -17,6 +17,7 @@ mypy = "<0.990"
 
 [tool.poetry.group.dev.dependencies]
 mistletoe = "^1.0.1"
+black = "^23.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
