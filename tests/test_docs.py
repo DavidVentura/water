@@ -117,7 +117,7 @@ def _parse(fnames: List[str]) -> List[ExampleWithArgs]:
     return ret
 
 
-@pytest.mark.parametrize('example', _parse(glob.glob('docs/uti*.md')))
+@pytest.mark.parametrize('example', _parse(glob.glob('docs/*.md')))
 def test_python_code_blocks_execute_with_bash_arguments(example):
     with tempfile.NamedTemporaryFile(mode='w') as ntf:
         ntf.write(example.src)
