@@ -232,6 +232,8 @@ def cast(value: Any, annotation: Any) -> Any:
     elif annotation is bool:
         value = value.lower() in ['true', '1', 't', 'y', 'yes']
     elif issubclass(annotation, enum.Enum):
+        if value not in annotation._member_names_:
+            raise ValueError(f"Valid choices are: {annotation._member_names_}")
         value = annotation[value]
     return value
 

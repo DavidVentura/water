@@ -20,7 +20,6 @@ In this example, if the user passes `--a`, they cannot pass `--b`, and vice vers
 
 ```run_example
 $ python my_script.py my_func --a some_value
-None
 $ python my_script.py my_func --a some_value --b should_fail
 The flags: --a, --b can't be provided at the same time
 ```

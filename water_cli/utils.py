@@ -91,7 +91,8 @@ def required_together(_flags_list: List[Tuple[str, ...]]) -> Any:
 def simple_cli(c: Callable[..., Any]) -> None:
     try:
         res = execute_command(c, shlex.join(sys.argv[1:]))
-        print(res)
+        if res is not None:
+            print(res)
     except water_cli.exceptions.BadSubcommand as bs:
         print(bs, 'Try any of:', bs.valid_options)
     except water_cli.exceptions.BadArguments as e:
