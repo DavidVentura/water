@@ -54,6 +54,73 @@ $ python example.py math subtract --x 5 --y 2
 3
 ```
 
+## Required vs Optional parameters
+
+When defining command-line interfaces, it's often useful to distinguish between required and optional parameters.
+
+### Required Parameters
+
+To define a required parameter, you can simply omit the default value of the parameter in the function signature. For example:
+```python
+from water_cli import simple_cli
+
+@simple_cli
+def greet(name: str):
+    return f"Hello, {name}!"
+```
+
+In this example, the `name` parameter is required since there is no default value specified. If you try to call the `greet` function without passing a value for `name`, you'll get a `MissingParameters` exception.
+
+```run_example
+$ python example.py greet --name World
+Hello, World!
+$ python example.py greet
+Missing parameters: --name
+```
+
+
+### Optional Parameters
+
+To define an optional parameter, you can specify a default value for the parameter in the function signature. For example:
+```python
+from water_cli import simple_cli
+
+@simple_cli
+def greet(name: str = "World"):
+    return f"Hello, {name}!"
+```
+
+In this example, the `name` parameter is optional since it has a default value of `"World"`. If you call the `greet` function without passing a value for `name`, it will use the default value instead.
+```run_example
+$ python example.py greet
+Hello, World!
+$ python example.py greet --name Alice
+Hello, Alice!
+```
+### Mixing Required and Optional Parameters
+
+You can mix required and optional parameters in the same function signature. Required parameters should be listed before optional parameters. For example:
+```python
+from water_cli import simple_cli
+
+@simple_cli
+def greet(name: str, times: int = 1):
+    ret = []
+    for i in range(times):
+        ret.append(f"Hello, {name}!")
+    return '\n'.join(ret)
+```
+
+In this example, `name` is a required parameter since it has no default value, while `times` is an optional parameter with a default value of `1`. If you call the `greet` function with only a value for `name`, it will use the default value for `times`. If you call it with both `name` and `times`, it will use the values you provided.
+
+```run_example
+$ python example.py greet --name Alice
+Hello, Alice!
+$ python example.py greet --name Alice --times 2
+Hello, Alice!
+Hello, Alice!
+```
+
 ## Type-based behavior
 
 ### Enum
