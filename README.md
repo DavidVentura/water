@@ -37,7 +37,7 @@ When we run the script with `python script.py greet --name Alice`, Water will ca
 
 ## Advanced usage
 
-Water also supports more advanced features, such as mutually exclusive flags and required flag groups. Here's an example:
+Please follow [the docs](https://water-cli.readthedocs.io/en/latest/?badge=latest).
 
 
 ## Contributing
