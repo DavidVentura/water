@@ -7,10 +7,12 @@ Here's an example of how to use Water to generate a CLI for a Python function:
 ```python
 import water_cli
 
+
 def add(x: int, y: int):
     return x + y
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     water_cli.simple_cli(add)
 ```
 
@@ -35,11 +37,12 @@ class Group:
     class math:
         def add(self, x: int, y: int):
             return x + y
-        
+
         def subtract(self, x: int, y: int):
             return x - y
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     water_cli.simple_cli(Group)
 ```
 
@@ -64,6 +67,7 @@ To define a required parameter, you can simply omit the default value of the par
 ```python
 from water_cli import simple_cli
 
+
 @simple_cli
 def greet(name: str):
     return f"Hello, {name}!"
@@ -85,6 +89,7 @@ To define an optional parameter, you can specify a default value for the paramet
 ```python
 from water_cli import simple_cli
 
+
 @simple_cli
 def greet(name: str = "World"):
     return f"Hello, {name}!"
@@ -103,12 +108,13 @@ You can mix required and optional parameters in the same function signature. Req
 ```python
 from water_cli import simple_cli
 
+
 @simple_cli
 def greet(name: str, times: int = 1):
     ret = []
     for i in range(times):
         ret.append(f"Hello, {name}!")
-    return '\n'.join(ret)
+    return "\n".join(ret)
 ```
 
 In this example, `name` is a required parameter since it has no default value, while `times` is an optional parameter with a default value of `1`. If you call the `greet` function with only a value for `name`, it will use the default value for `times`. If you call it with both `name` and `times`, it will use the values you provided.
@@ -129,15 +135,18 @@ Hello, Alice!
 import enum
 import water_cli
 
+
 class Fruit(enum.Enum):
     apple = enum.auto()
     banana = enum.auto()
     orange = enum.auto()
 
+
 def eat_fruit(fruit: Fruit):
     return f"Eating {fruit.name}... yum!"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     water_cli.simple_cli(eat_fruit)
 ```
 
@@ -166,11 +175,13 @@ Unable to convert 'potato' to type 'Fruit': 'potato'
 import water_cli
 from typing import List
 
+
 def my_function(name: str, numbers: List[int]):
     print(f"Hello, {name}!")
     return f"The sum of the numbers is: {sum(numbers)}"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     water_cli.simple_cli(my_function)
 ```
 
@@ -191,10 +202,12 @@ When we pass `--numbers 1,2,3,4,5` as a command-line argument, `water` automatic
 ```python
 import water_cli
 
+
 def my_function(fruit: water_cli.Repeated[str]):
     return f"The fruits are {', '.join(fruit)}."
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     water_cli.simple_cli(my_function)
 ```
 
@@ -212,13 +225,15 @@ In this example, `fruit` is declared as a `water_cli.Repeated[str]`, which means
 ```python
 import water_cli
 
+
 def greet(name: str, formal_greeting: water_cli.Flag):
     if formal_greeting:
         return f"Good day, {name}!"
     else:
         return f"Hello, {name}!"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     water_cli.simple_cli(greet)
 ```
 

@@ -8,9 +8,10 @@ import pytest
 from dataclasses import dataclass
 from typing import List, Tuple
 
+from black import format_str, FileMode
 from mistletoe import Document
-from mistletoe.block_token import CodeFence
-from mistletoe.span_token import RawText
+from mistletoe.block_token import CodeFence, Heading
+from mistletoe.span_token import RawText, InlineCode
 
 @dataclass
 class RunScript:
@@ -21,6 +22,7 @@ class RunScript:
 class ExampleWithArgs:
     src: str
     run_scripts: List[RunScript]
+    heading: str
 
 def _parse_run_script(script: str) -> List[RunScript]:
     """
@@ -67,14 +69,19 @@ def _get_examples_and_args_from_fd(f) -> List[ExampleWithArgs]:
     examples_and_args: List[ExampleWithArgs] = []
 
     _last_py_codeblock = None
-    for (i, b) in enumerate(code_blocks):
-        if b.language == 'run_example':
+    _last_heading = None
+    for (i, b) in enumerate(d.children):
+        if isinstance(b, CodeFence):
+            if b.language != 'run_example':
+                continue
             assert i > 0, "Can't have run_example as first block"
             for _i in range(i, -1, -1):
-                if code_blocks[_i].language == 'python':
-                    _last_py_codeblock = code_blocks[_i]
+                _this_child = d.children[_i]
+                if isinstance(_this_child, CodeFence) and _this_child.language == 'python':
+                    _last_py_codeblock = _this_child
                     break
-            assert _last_py_codeblock, f"Precursor to run_example have to be python"
+            assert _last_py_codeblock, "There's no `python` block precursor to this `run_example`"
+            assert _last_heading, "The codeblock must always be preceded by a heading"
 
             assert len(_last_py_codeblock.children) == 1
             assert len(b.children) == 1
@@ -83,8 +90,19 @@ def _get_examples_and_args_from_fd(f) -> List[ExampleWithArgs]:
             assert isinstance(_last_py_codeblock.children[0], RawText)
             assert isinstance(b.children[0], RawText)
 
+
             cmdline = b.children[0].content
-            examples_and_args.append(ExampleWithArgs(_last_py_codeblock.children[0].content, _parse_run_script(cmdline)))
+            e = ExampleWithArgs(_last_py_codeblock.children[0].content, _parse_run_script(cmdline), _last_heading)
+            examples_and_args.append(e)
+        elif isinstance(b, Heading):
+            _str = ''
+            for _child in b.children:
+                if isinstance(_child, InlineCode):
+                    _str += _child.children[0].content
+                else:
+                    _str += _child.content
+            _last_heading = '_'.join(_str.split()).lower()
+
 
     return examples_and_args
 
@@ -95,11 +113,11 @@ def _parse(fnames: List[str]) -> List[ExampleWithArgs]:
         with open(filename, 'r') as f:
             examples = _get_examples_and_args_from_fd(f)
         for example in examples:
-            ret.append(pytest.param(example, id=f'{filename}_'))
+            ret.append(pytest.param(example, id=f'{filename}_{example.heading}'))
     return ret
 
 
-@pytest.mark.parametrize('example', _parse(glob.glob('docs/*.md')))
+@pytest.mark.parametrize('example', _parse(glob.glob('docs/uti*.md')))
 def test_python_code_blocks_execute_with_bash_arguments(example):
     with tempfile.NamedTemporaryFile(mode='w') as ntf:
         ntf.write(example.src)
@@ -111,3 +129,9 @@ def test_python_code_blocks_execute_with_bash_arguments(example):
             stderr = s.stderr.decode('utf-8').strip()
             combined = stdout + stderr
             assert combined == invocation.combined_output
+
+
+@pytest.mark.parametrize('example', _parse(glob.glob('docs/*.md')))
+def test_python_code_blocks_are_linted(example):
+    res = format_str(example.src, mode=FileMode())
+    assert res == example.src

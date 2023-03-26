@@ -9,12 +9,11 @@ The `exclusive_flags` decorator is used to specify that a set of flags are mutua
 ```python
 from water_cli import exclusive_flags, simple_cli
 
-@exclusive_flags([('a', 'b'), ('c', 'd', 'e')])
+
+@simple_cli
+@exclusive_flags([("a", "b"), ("c", "d", "e")])
 def my_func(a=False, b=False, c=False, d=False, e=False):
     pass
-
-if __name__ == '__main__':
-    simple_cli(my_func)
 ```
 
 In this example, if the user passes `--a`, they cannot pass `--b`, and vice versa. Similarly, if the user passes `--c`, they cannot pass `--d` or `--e`, and vice versa.
@@ -32,11 +31,13 @@ The `required_together` decorator is used to specify that a set of flags must be
 ```python
 from water_cli import required_together, simple_cli
 
-@required_together([('a', 'b'), ('c', 'd')])
+
+@required_together([("a", "b"), ("c", "d")])
 def my_func(a=None, b=None, c=None, d=None):
     pass
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     simple_cli(my_func)
 ```
 
@@ -54,14 +55,15 @@ These two decorators can be used at once, for convenient handling of some common
 ```python
 from water_cli import required_together, exclusive_flags, simple_cli
 
-@required_together([('username', 'password'), ('api_key', 'api_token')])
-@exclusive_flags([('username', 'api_key')])
+
+@required_together([("username", "password"), ("api_key", "api_token")])
+@exclusive_flags([("username", "api_key")])
 def login(username=None, password=None, api_key=None, api_token=None):
     pass
 
-if __name__ == '__main__':
-    simple_cli(login)
 
+if __name__ == "__main__":
+    simple_cli(login)
 ```
 
 ```run_example
@@ -79,10 +81,12 @@ The `simple_cli` function is used to create a CLI for a function. The function t
 ```python
 from water_cli import simple_cli
 
+
 def my_func(name: str, age: int):
     return f"{name} is {age} years old."
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     simple_cli(my_func)
 ```
 

@@ -15,11 +15,10 @@ Once Water is installed, you can use it to create a command-line interface for y
 ```python
 import water_cli
 
+
+@water_cli.simple_cli
 def greet(name: str):
     return f"Hello, {name}!"
-
-if __name__ == '__main__':
-    water_cli.simple_cli(greet)
 ```
 This example creates a greet command that takes a name argument and prints a greeting. You can run this command from the command line by running:
 
