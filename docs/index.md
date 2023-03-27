@@ -24,4 +24,3 @@ The [Utilities](./utilities.md) guide provides an overview of the various utilit
 ## Type Casting Details
 
 The [Type Casting Details](./type-casting-details.md) guide provides an in-depth explanation of how Water uses type annotations and casting to ensure that the input values provided to your Python functions are of the correct type.
-
