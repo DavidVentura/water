@@ -127,73 +127,7 @@ Hello, Alice!
 Hello, Alice!
 ```
 
-## Type-based behavior
-
-### Enum
-
-```python
-import enum
-import water_cli
-
-
-class Fruit(enum.Enum):
-    apple = enum.auto()
-    banana = enum.auto()
-    orange = enum.auto()
-
-
-def eat_fruit(fruit: Fruit):
-    return f"Eating {fruit.name}... yum!"
-
-
-if __name__ == "__main__":
-    water_cli.simple_cli(eat_fruit)
-```
-
-In this example, we define an enum called `Fruit` with three members: `apple`, `banana`, and `orange`. Each member is associated with an opaque value.
-
-We then define a function called `eat_fruit` that takes a single argument, `fruit`, with type `Fruit`. When this function is called from the command line, Water will generate a CLI interface that allows the user to choose one of the three available fruits.
-
-For example, if the above code is saved in a file called `example.py`, we can run the following command:
-
-```run_example
-$ python example.py eat_fruit --fruit apple
-Eating apple... yum!
-```
-
-This will call the `eat_fruit` function and pass in the argument `fruit=Fruit.APPLE`. Water will validate that the `fruit` argument is one of the valid enum members, and will raise an error if an invalid value is used:
-
-```run_example
-$ python example.py eat_fruit --fruit potato
-Unable to convert 'potato' to type 'Fruit': Valid choices are: ['apple', 'banana', 'orange']
-```
-
-### List
-
-
-```python
-import water_cli
-from typing import List
-
-
-def my_function(name: str, numbers: List[int]):
-    print(f"Hello, {name}!")
-    return f"The sum of the numbers is: {sum(numbers)}"
-
-
-if __name__ == "__main__":
-    water_cli.simple_cli(my_function)
-```
-
-In this example, we define a `my_function` command that takes two arguments: `name`, which is a string, and `numbers` which is a list of integers. When we run the `my_function` command, we pass the `numbers` argument as a comma-separated string:
-
-```run_example
-$ python example.py my_function --name Alice --numbers 1,2,3,4,5
-Hello, Alice!
-The sum of the numbers is: 15
-```
-
-When we pass `--numbers 1,2,3,4,5` as a command-line argument, `water` automatically converts the input to a list of integers. This means that inside the `my_function` implementation, `numbers` is a Python list of integers, and we can perform arithmetic operations on it directly without the need for type conversions.
+## Utility types
 
 ### Repeated
 
