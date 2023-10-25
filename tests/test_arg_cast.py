@@ -50,4 +50,4 @@ class SomeEnum(enum.Enum):
     (Repeated[int], ["10", "20"], [10, 20]),
     ])
 def test_cast(_type, in_str, expected):
-    assert cast(in_str, _type) == expected
+    assert cast("key", in_str, _type) == expected

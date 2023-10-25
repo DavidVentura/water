@@ -3,6 +3,15 @@ from typing import List, Tuple
 class BadArguments(ValueError):
     pass
 
+class InvalidChoice(BadArguments):
+    def __init__(self, argument: str, value: str, valid_options: List[str]):
+        self.argument = argument
+        self.value = value
+        self.valid_options = valid_options
+
+    def __str__(self) -> str:
+        return f"Allowed values are {', '.join(self.valid_options)}."
+
 class BadSubcommand(BadArguments):
     def __init__(self, parent: List[str], attempted: str, valid_options: List[str]):
         self.parent = parent
