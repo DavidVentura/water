@@ -89,7 +89,7 @@ This will call the `eat_fruit` function and pass in the argument `fruit=Fruit.AP
 
 ```run_example
 $ python example.py eat_fruit --fruit potato
-Unable to convert 'potato' to type 'Fruit': Valid choices are: ['apple', 'banana', 'orange']
+Unable to convert 'potato' to type 'Fruit': Allowed values are apple, banana, orange.
 ```
 
 

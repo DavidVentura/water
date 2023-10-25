@@ -3,10 +3,10 @@ import inspect
 import re
 import shlex
 
-from collections.abc import Iterable
 from dataclasses import dataclass
 from water_cli.exceptions import (BadArguments, BadSubcommand, UnexpectedParameters, MissingParameters,
                                   ConsecutiveValues, UnexpectedValue, MissingValues, IncorrectType,
+                                  InvalidChoice,
                                   )
 from typing import List, Callable, Any, Tuple, Optional, Union, Dict, TypeVar
 
@@ -203,7 +203,7 @@ def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
     args_by_name = {a.name: a for a in c.args}
     for k, v in kwargs.items():
         try:
-            casted[k] = cast(v, args_by_name[k].annotation)
+            casted[k] = cast(k, v, args_by_name[k].annotation)
         except Exception as e:
             a = args_by_name[k].annotation
             _typename = getattr(a, '__name__', str(a))
@@ -211,29 +211,29 @@ def apply_args(c: MCallable, kwargs: Dict[str, Any]) -> Any:
 
     return c.fn(**casted)
 
-def cast(value: Any, annotation: Any) -> Any:
+def cast(key: str, value: Any, annotation: Any) -> Any:
     origin = typing_get_origin(annotation)
     args = typing_get_args(annotation)
     if origin == Union:
         for arg in args:
             try:
-                value = cast(value, arg)
+                value = cast(key, value, arg)
                 break
             except Exception:
                 continue
     elif origin in [list, tuple, List, Tuple]:
         value = value.split(',')
         if len(args):
-            value = [cast(i, args[0]) for i in value]
+            value = [cast(key, i, args[0]) for i in value]
     elif origin == Repeated:
-        value = [cast(i, args[0]) for i in value]
+        value = [cast(key, i, args[0]) for i in value]
     elif annotation in [int, float]:
         value = annotation(value)
     elif annotation is bool:
         value = value.lower() in ['true', '1', 't', 'y', 'yes']
     elif issubclass(annotation, enum.Enum):
         if value not in annotation._member_names_:
-            raise ValueError(f"Valid choices are: {annotation._member_names_}")
+            raise InvalidChoice(key, value, annotation._member_names_)
         value = annotation[value]
     return value
 
